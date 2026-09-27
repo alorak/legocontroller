@@ -2816,11 +2816,34 @@ const companyLE = new DataView(Uint8Array.of(3,151).buffer).getUint16(0, true); 
    paketinde 1623 servisini duyurmuyor; servis şartı konulursa tarayıcının
    cihaz listesinde hiç görünmüyor. Filtreler VEYA'lıdır, ikisi de denenir. */
 function hubFiltersFor(type){
-  return [
+  const filters = [
     { manufacturerData:[{ companyIdentifier: companyBE,
                           dataPrefix: Uint8Array.of(type.hw) }] },
     { services:[LWP3_SVC] }
   ];
+
+  // Powered Up Remote 88010'un bazı eski firmware sürümleri reklam adında
+  // "Handset" kullanıyor. Manufacturer/service reklamı tarayıcı tarafından
+  // kaçırılırsa isim filtresi cihazın seçim listesinde görünmesini sağlar.
+  if(type.key === 'remote_controller'){
+    filters.push({ namePrefix:'Handset' });
+    filters.push({ namePrefix:'Remote' });
+  }
+  return filters;
+}
+
+async function requestBluetoothDevice(type, broadScan = false){
+  const optionalServices = [SVC, LWP3_SVC];
+  if(broadScan){
+    return navigator.bluetooth.requestDevice({
+      acceptAllDevices: true,
+      optionalServices
+    });
+  }
+  return navigator.bluetooth.requestDevice({
+    filters: type.lwp3 ? hubFiltersFor(type) : filtersFor(type.hw),
+    optionalServices
+  });
 }
 
 function filtersFor(hw){
@@ -2917,10 +2940,24 @@ async function connect(type){
   try{
     const isHub = !!type.lwp3;
     let hubProto = null;               // 'lwp3' | 'spike3'
-    const device = await navigator.bluetooth.requestDevice({
-      filters: isHub ? hubFiltersFor(type) : filtersFor(type.hw),
-      optionalServices: [SVC, LWP3_SVC]
-    });
+    let usedBroadScan = false;
+    let device;
+
+    try{
+      device = await requestBluetoothDevice(type, false);
+    }catch(scanError){
+      // BlockCode'da bulunan "tüm cihazları göster" taramasının kontrollü
+      // karşılığı: yalnızca eski Remote Controller filtreden çıkmadığında sor.
+      if(scanError.name !== 'NotFoundError' || type.key !== 'remote_controller') throw scanError;
+
+      const retryText = currentLang === 'tr'
+        ? 'LEGO Remote Controller listede görünmedi mi?\n\nEski 88010 / Handset cihazları için geniş Bluetooth taraması açılsın mı?'
+        : 'Could not see the LEGO Remote Controller?\n\nOpen a broad Bluetooth scan for older 88010 / Handset devices?';
+      if(!confirm(retryText)) return;
+
+      usedBroadScan = true;
+      device = await requestBluetoothDevice(type, true);
+    }
 
     // 1. Aynı device.id'ye sahip mevcut kayıt var mı?
     let existing = devices.get(device.id);
@@ -2962,6 +2999,16 @@ async function connect(type){
         char = notif = await service.getCharacteristic(LWP3_CHAR);
         hubProto = 'lwp3';
       }catch(e){
+        // 88010 Remote Controller LWP3 (1623) cihazıdır. Geniş taramada yanlış
+        // cihaz seçildiyse fd02'ye düşüp onu Remote gibi göstermeyelim.
+        if(type.key === 'remote_controller'){
+          try{ device.gatt.disconnect(); }catch(e2){}
+          const msg = currentLang === 'tr'
+            ? 'Seçilen cihaz LEGO Powered Up Remote Controller 88010 değil veya LWP3 (1623) servisini sunmuyor.'
+            : 'The selected device is not a LEGO Powered Up Remote Controller 88010, or it does not expose the LWP3 (1623) service.';
+          alert(msg);
+          return;
+        }
         try{
           service = await server.getPrimaryService(SVC);
           char    = await service.getCharacteristic(CHAR_DATA);
@@ -3042,6 +3089,9 @@ async function connect(type){
           :                         onNotify(d, ev));
     await notif.startNotifications();
     log(d, isReconnecting ? t('reconnected', { name: d.name }) : (t('ready') + ': ' + d.name), 'g');
+    if(usedBroadScan && type.key === 'remote_controller'){
+      log(d, '🎮 Remote Controller geniş Bluetooth taramasıyla bulundu', 'g');
+    }
 
     if(hubProto === 'lwp3'){
       // Hub bağlanınca takılı cihazları kendiliğinden bildirir;
