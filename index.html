@@ -838,7 +838,10 @@ select{font:600 13px inherit;padding:8px 10px;border:1px solid var(--line);borde
       const file = new URL(img.src).pathname.split('/').pop() || '';
       if (!file.toLowerCase().endsWith('.png')) return;
       img.dataset.blockcodeFallback = '1';
-      img.src = './img/' + file.replace(/\.png$/i, '.svg');
+      const fallbackFile = file === 'remote_controller_icon.png'
+        ? 'remote-controller.svg'
+        : file.replace(/\.png$/i, '.svg');
+      img.src = './img/' + fallbackFile;
     } catch (_) {}
   }, true);
 })();
