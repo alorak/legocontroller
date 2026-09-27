@@ -33,17 +33,31 @@ function legoManufacturerFilter(hw){
   };
 }
 
+function legoCompanyFilter(){
+  return {
+    manufacturerData:[{
+      companyIdentifier: LEGO_COMPANY_ID
+    }]
+  };
+}
+
 function hubFiltersFor(type){
   return [
     { services:[LWP3_SVC] },
-    legoManufacturerFilter(type.hw)
+    legoManufacturerFilter(type.hw),
+    // Bazı eski LEGO firmware'leri servis UUID'sini veya beklenen type byte'ını
+    // reklam paketinde tutarlı vermiyor. Son fallback yalnızca LEGO üreticisini
+    // gösterir; mouse/klavye/kulaklık gibi cihazları listeye sokmaz.
+    legoCompanyFilter()
   ];
 }
 
 function filtersFor(hw){
   return [
     { services:[SVC] },
-    legoManufacturerFilter(hw)
+    legoManufacturerFilter(hw),
+    // FD02/type eşleşmesi kaçırılırsa yalnızca LEGO manufacturer reklamlarını göster.
+    legoCompanyFilter()
   ];
 }
 
