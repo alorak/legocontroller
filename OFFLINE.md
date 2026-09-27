@@ -1,15 +1,17 @@
 # Offline and GitHub Pages
 
-The application itself has no runtime CDN, remote font, HTTP API, XHR, WebSocket, or package-manager dependency.
+The application code has no runtime package-manager, remote font, HTTP API, XHR or WebSocket dependency.
 
-- The first GitHub Pages visit needs Internet access.
-- The service worker precaches the local application shell.
-- Device artwork is loaded from `https://blockcode.alorak.com/img/` to keep the same visuals as BlockCode.
-- During service-worker installation, BlockCode artwork is cached with `no-cors` requests for later offline use.
-- Matching local SVG files remain bundled as a fallback if BlockCode artwork cannot be loaded.
-- Later visits can load the UI without Internet access once the service worker has completed installation.
-- Settings and dashboards are stored in browser `localStorage`.
+- The first GitHub Pages visit needs Internet access so the app shell and service worker can be installed.
+- HTML, CSS, JavaScript, the manifest, PWA icons and local SVG fallbacks are precached.
+- Device artwork uses the same PNG files as BlockCode and is cached during service-worker installation.
+- If BlockCode artwork is unavailable, the UI automatically falls back to the bundled local SVG version.
+- Later visits can load the application shell and cached artwork without Internet access.
+- An in-app status pill shows the browser online/offline state.
+- When a new service worker is ready, the app shows a refresh prompt instead of silently replacing the running version.
+- Settings, dashboards and gamepad mappings stay in browser localStorage.
 - Bluetooth traffic stays local through Web Bluetooth.
+- Legacy Powered Up Remote Controller 88010 uses a broad Web Bluetooth chooser, matching BlockCode's generic scan behavior, and is validated via LWP3 service 1623 after selection.
 
-Web Bluetooth requires a supported browser and a secure context. GitHub Pages provides HTTPS.
-All local runtime paths are relative, so project-site hosting under `/legocontroller/` works.
+Web Bluetooth still requires a supported browser and secure context. GitHub Pages provides HTTPS.
+All runtime paths are relative, so project-site hosting under /legocontroller/ is supported.

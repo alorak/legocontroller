@@ -1,19 +1,66 @@
 {
+  "id": "./",
   "name": "LEGO Device Controller",
-  "short_name": "Device Controller",
-  "description": "Offline-capable Bluetooth monitoring and control panel.",
+  "short_name": "LEGO Controller",
+  "description": "Offline-capable Bluetooth monitoring and control panel for supported LEGO devices.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone"
+  ],
   "background_color": "#f4f6fa",
   "theme_color": "#4c8dff",
   "lang": "tr",
+  "categories": [
+    "utilities",
+    "education"
+  ],
   "icons": [
+    {
+      "src": "./img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
     {
       "src": "./img/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "url": "./#pano",
+      "icons": [
+        {
+          "src": "./img/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Gamepad",
+      "short_name": "Pad",
+      "url": "./#pad",
+      "icons": [
+        {
+          "src": "./img/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }
