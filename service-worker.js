@@ -1,4 +1,4 @@
-const CACHE_NAME='legocontroller-offline-v4';
+const CACHE_NAME='legocontroller-offline-v5';
 const BLOCKCODE_ORIGIN='https://blockcode.alorak.com';
 const APP_SHELL=[
   "./",

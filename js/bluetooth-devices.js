@@ -14,57 +14,44 @@ const DEVICE_TYPES = [
   {key:'remote_controller',label:'Remote Controller', img:'https://blockcode.alorak.com/img/remote_controller_icon.png', hw:0x42, ready:true, lwp3:true}
 ];
 
-/* LEGO uygulamasının kendi reklam filtresi: manufacturer data = [2, hwType, …]
-   companyIdentifier hem big hem little okunuşuyla denenir (firmware farkı). */
-const companyBE = new DataView(Uint8Array.of(3,151).buffer).getUint16(0, false); // 0x0397
-const companyLE = new DataView(Uint8Array.of(3,151).buffer).getUint16(0, true);  // 0x9703
-/* Hub filtreleri — index.html'de çalışan biçimin aynısı.
-   ÖNEMLİ: manufacturer data filtresine `services` EKLENMEZ. Prime Hub reklam
-   paketinde 1623 servisini duyurmuyor; servis şartı konulursa tarayıcının
-   cihaz listesinde hiç görünmüyor. Filtreler VEYA'lıdır, ikisi de denenir. */
-function hubFiltersFor(type){
-  const filters = [
-    { manufacturerData:[{ companyIdentifier: companyBE,
-                          dataPrefix: Uint8Array.of(type.hw) }] },
-    { services:[LWP3_SVC] }
-  ];
-  if(type.key === 'remote_controller'){
-    filters.push({ namePrefix:'Handset' });
-    filters.push({ namePrefix:'Remote' });
-  }
-  return filters;
+/* LEGO BLE advertisement filters.
+   BlockCode ile aynı model kullanılır:
+   - LEGO Company ID: 0x0397
+   - manufacturer data'nın ilk byte'ı: device type
+   - service ve manufacturer filtreleri AYRI entries olarak verilir; Web Bluetooth
+     filters dizisindeki entries OR mantığıyla değerlendirilir.
+   Bu sayede cihaz service UUID'yi reklam etmese bile manufacturer data ile,
+   manufacturer data eksikse de LEGO service UUID ile listede görünebilir. */
+const LEGO_COMPANY_ID = 0x0397;
+
+function legoManufacturerFilter(hw){
+  return {
+    manufacturerData:[{
+      companyIdentifier: LEGO_COMPANY_ID,
+      dataPrefix: Uint8Array.of(hw)
+    }]
+  };
 }
 
-async function requestBluetoothDevice(type){
-  const optionalServices = [SVC, LWP3_SVC];
-
-  // BlockCode'un genel tarama yolu eski Powered Up Remote 88010'u güvenilir
-  // biçimde gösteriyor. Remote seçildiğinde aynı davranışı doğrudan kullan.
-  // Cihaz daha sonra LWP3 (1623) servisiyle doğrulanır.
-  if(type.key === 'remote_controller'){
-    return navigator.bluetooth.requestDevice({
-      acceptAllDevices: true,
-      optionalServices
-    });
-  }
-
-  return navigator.bluetooth.requestDevice({
-    filters: type.lwp3 ? hubFiltersFor(type) : filtersFor(type.hw),
-    optionalServices
-  });
+function hubFiltersFor(type){
+  return [
+    { services:[LWP3_SVC] },
+    legoManufacturerFilter(type.hw)
+  ];
 }
 
 function filtersFor(hw){
-  const prefix = { dataPrefix: Uint8Array.of(2, hw), mask: Uint8Array.of(255,255) };
   return [
-    { services:[SVC], manufacturerData:[{ ...prefix, companyIdentifier: companyBE }] },
-    { services:[SVC], manufacturerData:[{ ...prefix, companyIdentifier: companyLE }] },
-    // Son çare: reklam verisi beklenenden farklı olan firmware'lerde cihaz yine
-    // listede çıksın. Bu kural tarayıcı listesine TÜM fd02 cihazlarını getirir,
-    // yani seçim ekranında tıklanan tip yanlış olabilir — bu yüzden cihaz tipi
-    // bağlantıdan sonra InfoResponse ile doğrulanır (reconcileDeviceType).
-    { services:[SVC] }
+    { services:[SVC] },
+    legoManufacturerFilter(hw)
   ];
+}
+
+async function requestBluetoothDevice(type){
+  return navigator.bluetooth.requestDevice({
+    filters: type.lwp3 ? hubFiltersFor(type) : filtersFor(type.hw),
+    optionalServices: [SVC, LWP3_SVC]
+  });
 }
 
 function deviceTypeLabel(dt){
@@ -148,7 +135,6 @@ async function connect(type){
   try{
     const isHub = !!type.lwp3;
     let hubProto = null;               // 'lwp3' | 'spike3'
-    const usedBroadScan = type.key === 'remote_controller';
     const device = await requestBluetoothDevice(type);
 
     // 1. Aynı device.id'ye sahip mevcut kayıt var mı?
@@ -279,10 +265,6 @@ async function connect(type){
           :                         onNotify(d, ev));
     await notif.startNotifications();
     log(d, isReconnecting ? t('reconnected', { name: d.name }) : (t('ready') + ': ' + d.name), 'g');
-    if(usedBroadScan){
-      log(d, '🎮 Remote Controller BlockCode uyumlu geniş Bluetooth taramasıyla bulundu', 'g');
-    }
-
     if(hubProto === 'lwp3'){
       // Hub bağlanınca takılı cihazları kendiliğinden bildirir;
       // bizim istememiz gereken sadece ad ve pil.
