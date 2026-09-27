@@ -1,0 +1,19 @@
+{
+  "name": "LEGO Device Controller",
+  "short_name": "Device Controller",
+  "description": "Offline-capable Bluetooth monitoring and control panel.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f6fa",
+  "theme_color": "#4c8dff",
+  "lang": "tr",
+  "icons": [
+    {
+      "src": "./img/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
