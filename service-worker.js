@@ -1,9 +1,22 @@
-const CACHE_NAME = 'legocontroller-offline-v2';
-
-const APP_SHELL = [
+const CACHE_NAME='legocontroller-offline-v4';
+const BLOCKCODE_ORIGIN='https://blockcode.alorak.com';
+const APP_SHELL=[
   "./",
   "./index.html",
+  "./styles.css",
   "./manifest.webmanifest",
+  "./pwa.js",
+  "./js/i18n.js",
+  "./js/ui-preferences.js",
+  "./js/protocol-controller.js",
+  "./js/device-ui.js",
+  "./js/bluetooth-devices.js",
+  "./js/protocol-lwp3.js",
+  "./js/hub-ui.js",
+  "./js/protocol-spike.js",
+  "./js/dashboard.js",
+  "./js/gamepad.js",
+  "./js/bootstrap.js",
   "./img/favicon.svg",
   "./img/single-motor-body.svg",
   "./img/single-motor-shaft.svg",
@@ -23,10 +36,11 @@ const APP_SHELL = [
   "./img/distance_sensor_icon.svg",
   "./img/matrix_icon.svg",
   "./img/hub_light_icon.svg",
-  "./img/spike_prime_hub.svg"
+  "./img/spike_prime_hub.svg",
+  "./img/icon-192.png",
+  "./img/icon-512.png"
 ];
-
-const REMOTE_ARTWORK = [
+const REMOTE_ARTWORK=[
   "https://blockcode.alorak.com/img/single-motor-body.png",
   "https://blockcode.alorak.com/img/single-motor-shaft.png",
   "https://blockcode.alorak.com/img/controller.png",
@@ -47,50 +61,52 @@ const REMOTE_ARTWORK = [
   "https://blockcode.alorak.com/img/hub_light_icon.png",
   "https://blockcode.alorak.com/img/spike_prime_hub.png"
 ];
-const BLOCKCODE_ORIGIN = 'https://blockcode.alorak.com';
-const scopedUrl = path => new URL(path, self.registration.scope).toString();
+const scopedUrl=path=>new URL(path,self.registration.scope).toString();
 
-async function cacheRemoteArtwork(cache) {
-  await Promise.allSettled(REMOTE_ARTWORK.map(async url => {
-    const response = await fetch(new Request(url, { mode: 'no-cors', cache: 'reload' }));
-    await cache.put(url, response);
+async function cacheRemoteArtwork(cache){
+  await Promise.allSettled(REMOTE_ARTWORK.map(async url=>{
+    const request=new Request(url,{mode:'no-cors',cache:'reload'});
+    const response=await fetch(request);
+    await cache.put(request,response);
   }));
 }
 
-self.addEventListener('install', event => {
+self.addEventListener('install',event=>{
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(async cache => {
-        await cache.addAll(APP_SHELL.map(scopedUrl));
-        await cacheRemoteArtwork(cache);
-      })
-      .then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then(async cache=>{
+      await cache.addAll(APP_SHELL.map(scopedUrl));
+      await cacheRemoteArtwork(cache);
+    })
   );
 });
 
-self.addEventListener('activate', event => {
+self.addEventListener('activate',event=>{
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))))
-      .then(() => self.clients.claim())
+      .then(keys=>Promise.all(keys.filter(key=>key!==CACHE_NAME).map(key=>caches.delete(key))))
+      .then(()=>self.clients.claim())
   );
 });
 
-self.addEventListener('fetch', event => {
-  const request = event.request;
-  if (request.method !== 'GET') return;
+self.addEventListener('message',event=>{
+  if(event.data && event.data.type==='SKIP_WAITING') self.skipWaiting();
+});
 
-  const url = new URL(request.url);
-  const isSameOrigin = url.origin === self.location.origin;
-  const isBlockCodeArtwork = url.origin === BLOCKCODE_ORIGIN && url.pathname.startsWith('/img/');
+self.addEventListener('fetch',event=>{
+  const request=event.request;
+  if(request.method!=='GET') return;
 
-  if (isBlockCodeArtwork) {
+  const url=new URL(request.url);
+  const sameOrigin=url.origin===self.location.origin;
+  const blockCodeArtwork=url.origin===BLOCKCODE_ORIGIN && url.pathname.startsWith('/img/');
+
+  if(blockCodeArtwork){
     event.respondWith(
-      caches.match(request).then(cached => {
-        if (cached) return cached;
-        return fetch(request).then(response => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+      caches.match(request).then(cached=>{
+        if(cached) return cached;
+        return fetch(request).then(response=>{
+          const copy=response.clone();
+          caches.open(CACHE_NAME).then(cache=>cache.put(request,copy));
           return response;
         });
       })
@@ -98,30 +114,30 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  if (!isSameOrigin) return;
+  if(!sameOrigin) return;
 
-  if (request.mode === 'navigate') {
+  if(request.mode==='navigate'){
     event.respondWith(
       fetch(request)
-        .then(response => {
-          if (response && response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(scopedUrl('./index.html'), copy));
+        .then(response=>{
+          if(response && response.ok){
+            const copy=response.clone();
+            caches.open(CACHE_NAME).then(cache=>cache.put(scopedUrl('./index.html'),copy));
           }
           return response;
         })
-        .catch(() => caches.match(scopedUrl('./index.html')))
+        .catch(()=>caches.match(scopedUrl('./index.html')))
     );
     return;
   }
 
   event.respondWith(
-    caches.match(request).then(cached => {
-      if (cached) return cached;
-      return fetch(request).then(response => {
-        if (response && response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+    caches.match(request).then(cached=>{
+      if(cached) return cached;
+      return fetch(request).then(response=>{
+        if(response && response.ok){
+          const copy=response.clone();
+          caches.open(CACHE_NAME).then(cache=>cache.put(request,copy));
         }
         return response;
       });
