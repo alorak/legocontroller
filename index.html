@@ -827,6 +827,22 @@ select{font:600 13px inherit;padding:8px 10px;border:1px solid var(--line);borde
   .pad-logo-box img{width:36px;height:36px}
 }
 </style>
+<script>
+(function(){
+  const BLOCKCODE_BASE = 'https://blockcode.alorak.com/img/';
+  window.addEventListener('error', function(event){
+    const img = event.target;
+    if (!(img instanceof HTMLImageElement) || img.dataset.blockcodeFallback === '1') return;
+    if (!img.src.startsWith(BLOCKCODE_BASE)) return;
+    try {
+      const file = new URL(img.src).pathname.split('/').pop() || '';
+      if (!file.toLowerCase().endsWith('.png')) return;
+      img.dataset.blockcodeFallback = '1';
+      img.src = './img/' + file.replace(/\.png$/i, '.svg');
+    } catch (_) {}
+  }, true);
+})();
+</script>
 </head>
 <body>
 
@@ -2385,8 +2401,8 @@ function log(d, text, cls=''){
 /* ── ortak parçalar ─────────────────────────────────────────────────────── */
 const motorVisHTML = (cls='') => `
   <div class="motorvis ${cls}">
-    <img src="./img/single-motor-body.svg" alt="">
-    <img class="shaft" src="./img/single-motor-shaft.svg" alt="">
+    <img src="https://blockcode.alorak.com/img/single-motor-body.png" alt="">
+    <img class="shaft" src="https://blockcode.alorak.com/img/single-motor-shaft.png" alt="">
   </div>`;
 
 const commonStatsHTML = extra => `
@@ -2776,16 +2792,16 @@ controller: {
    Bağlantı
    ══════════════════════════════════════════════════════════════════════════ */
 const DEVICE_TYPES = [
-  {key:'controller',       label:'Controller',        img:'./img/controller.svg',        hw:3,    ready:true },
-  {key:'single_motor',     label:'Single Motor',      img:'./img/single-motor.svg',      hw:0,    ready:true },
-  {key:'double_motor',     label:'Double Motor',      img:'./img/double-motor.svg',      hw:1,    ready:true },
-  {key:'color_sensor',     label:'Color Sensor',      img:'./img/color-sensor.svg',      hw:2,    ready:true },
-  {key:'spike_essential',  label:'Essential Hub',     img:'./img/essential-hub.svg',     hw:0x83, ready:true, lwp3:true},
-  {key:'spike_prime',      label:'Prime Hub',         img:'./img/prime-hub.svg',         hw:0x01, ready:true, lwp3:true},
-  {key:'technic_hub',      label:'Technic Hub',       img:'./img/technic-hub.svg',       hw:0x80, ready:true, lwp3:true},
-  {key:'city_hub',         label:'City Hub',          img:'./img/city-hub.svg',          hw:0x41, ready:true, lwp3:true},
-  {key:'boost_move_hub',   label:'Boost Move Hub',    img:'./img/boost-hub.svg',         hw:0x40, ready:true, lwp3:true},
-  {key:'remote_controller',label:'Remote Controller', img:'./img/remote-controller.svg', hw:0x42, ready:true, lwp3:true}
+  {key:'controller',       label:'Controller',        img:'https://blockcode.alorak.com/img/controller.png',        hw:3,    ready:true },
+  {key:'single_motor',     label:'Single Motor',      img:'https://blockcode.alorak.com/img/single-motor.png',      hw:0,    ready:true },
+  {key:'double_motor',     label:'Double Motor',      img:'https://blockcode.alorak.com/img/double-motor.png',      hw:1,    ready:true },
+  {key:'color_sensor',     label:'Color Sensor',      img:'https://blockcode.alorak.com/img/color-sensor.png',      hw:2,    ready:true },
+  {key:'spike_essential',  label:'Essential Hub',     img:'https://blockcode.alorak.com/img/essential-hub.png',     hw:0x83, ready:true, lwp3:true},
+  {key:'spike_prime',      label:'Prime Hub',         img:'https://blockcode.alorak.com/img/prime-hub.png',         hw:0x01, ready:true, lwp3:true},
+  {key:'technic_hub',      label:'Technic Hub',       img:'https://blockcode.alorak.com/img/technic-hub.png',       hw:0x80, ready:true, lwp3:true},
+  {key:'city_hub',         label:'City Hub',          img:'https://blockcode.alorak.com/img/city-hub.png',          hw:0x41, ready:true, lwp3:true},
+  {key:'boost_move_hub',   label:'Boost Move Hub',    img:'https://blockcode.alorak.com/img/boost-hub.png',         hw:0x40, ready:true, lwp3:true},
+  {key:'remote_controller',label:'Remote Controller', img:'https://blockcode.alorak.com/img/remote-controller.png', hw:0x42, ready:true, lwp3:true}
 ];
 
 /* LEGO uygulamasının kendi reklam filtresi: manufacturer data = [2, hwType, …]
@@ -3434,9 +3450,9 @@ const KIND_NAME = new Proxy({}, {
   get: (_, prop) => (KIND_NAMES[currentLang] && KIND_NAMES[currentLang][prop]) ||
                     KIND_NAMES.en[prop] || t('device')
 });
-const KIND_ICON = { motor:'./img/spike_motor_icon.svg', force:'./img/force_sensor_icon.svg',
-                    color:'./img/color_sensor_icon.svg', distance:'./img/distance_sensor_icon.svg',
-                    matrix:'./img/matrix_icon.svg', other:'./img/hub_light_icon.svg' };
+const KIND_ICON = { motor:'https://blockcode.alorak.com/img/spike_motor_icon.png', force:'https://blockcode.alorak.com/img/force_sensor_icon.png',
+                    color:'https://blockcode.alorak.com/img/color_sensor_icon.png', distance:'https://blockcode.alorak.com/img/distance_sensor_icon.png',
+                    matrix:'https://blockcode.alorak.com/img/matrix_icon.png', other:'https://blockcode.alorak.com/img/hub_light_icon.png' };
 const kindIcon = k => KIND_ICON[k] || KIND_ICON.other;
 
 const PORT_LETTERS = ['A','B','C','D','E','F'];
@@ -3847,7 +3863,7 @@ function renderSlotCard(d, port){
   const el = document.createElement('div');
   el.className = 'card';
   el.dataset.key = `${d.id}#${port}`;
-  const hubImg = (d.typeInfo && d.typeInfo.img) || './img/spike_prime_hub.svg';
+  const hubImg = (d.typeInfo && d.typeInfo.img) || 'https://blockcode.alorak.com/img/spike_prime_hub.png';
   el.innerHTML = `
     <div class="card-head slot-head">
       <button class="slot-hub-crumb" data-crumb title="${t('backToHub')}">
@@ -3856,7 +3872,7 @@ function renderSlotCard(d, port){
       </button>
       <span class="crumb-sep">›</span>
       <div class="slot-device-info">
-        <img class="s-icon" src="./img/hub_light_icon.svg" alt="">
+        <img class="s-icon" src="https://blockcode.alorak.com/img/hub_light_icon.png" alt="">
         <div>
           <div class="name">Port ${PORT_LETTERS[port]}</div>
           <div class="meta"><span class="dot"></span><span class="s-type">${t('emptySlot')}</span></div>
@@ -3931,7 +3947,7 @@ function renderHubSlots(d){
       setText(card, '.s-typename', ad);
       const icon = $(card, '.s-icon');
       if(icon){
-        icon.src = dolu ? kindIcon(p.kind) : './img/hub_light_icon.svg';
+        icon.src = dolu ? kindIcon(p.kind) : 'https://blockcode.alorak.com/img/hub_light_icon.png';
         icon.style.opacity = dolu ? 1 : .35;
       }
       const dot = $(card, '.card-head .dot');
@@ -4034,8 +4050,8 @@ function slotBodyHTML(kind, proto){
 function slotVisualHTML(kind){
   if(kind == null) return '';
   if(kind === 'motor')
-    return `<div class="motorvis"><img src="./img/single-motor-body.svg" alt="">
-            <img class="shaft" src="./img/single-motor-shaft.svg" alt=""></div>`;
+    return `<div class="motorvis"><img src="https://blockcode.alorak.com/img/single-motor-body.png" alt="">
+            <img class="shaft" src="https://blockcode.alorak.com/img/single-motor-shaft.png" alt=""></div>`;
   if(kind === 'color') return '<div class="swatch"><span>?</span></div>';
   if(kind === 'matrix')
     return `<div class="mx3 small">${Array.from({length:9},(_,i)=>`<i data-mx="${i}"></i>`).join('')}</div>`;
@@ -6527,7 +6543,7 @@ function renderWizardStepDevice(container, list){
 
   for(const d of list){
     const isSel = d.id === wizardState.deviceId;
-    const icon = (d.typeInfo && d.typeInfo.img) || './img/single-motor.svg';
+    const icon = (d.typeInfo && d.typeInfo.img) || 'https://blockcode.alorak.com/img/single-motor.png';
     const typeLbl = deviceTypeLabel(d.typeInfo);
     const bat = d.state && d.state.battery != null ? `${d.state.battery}% 🔋` : '';
 
@@ -6586,7 +6602,7 @@ function renderWizardStepSource(container){
     hubCard.innerHTML = `
       <span class="wiz-check">✓</span>
       <div style="display:flex;align-items:center;gap:10px">
-        <img src="${(d.typeInfo && d.typeInfo.img) || './img/prime-hub.svg'}" style="width:40px;height:40px;object-fit:contain" alt="">
+        <img src="${(d.typeInfo && d.typeInfo.img) || 'https://blockcode.alorak.com/img/prime-hub.png'}" style="width:40px;height:40px;object-fit:contain" alt="">
         <div>
           <div style="font-size:14px;font-weight:700;color:var(--ink)">${t('hubGeneral')}</div>
           <div style="font-size:11.5px;color:var(--muted)">${t('hubGeneralDesc')}</div>
