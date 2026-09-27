@@ -838,7 +838,10 @@ select{font:600 13px inherit;padding:8px 10px;border:1px solid var(--line);borde
       const file = new URL(img.src).pathname.split('/').pop() || '';
       if (!file.toLowerCase().endsWith('.png')) return;
       img.dataset.blockcodeFallback = '1';
-      img.src = './img/' + file.replace(/\.png$/i, '.svg');
+      const fallbackFile = file === 'remote_controller_icon.png'
+        ? 'remote-controller.svg'
+        : file.replace(/\.png$/i, '.svg');
+      img.src = './img/' + fallbackFile;
     } catch (_) {}
   }, true);
 })();
@@ -2801,7 +2804,7 @@ const DEVICE_TYPES = [
   {key:'technic_hub',      label:'Technic Hub',       img:'https://blockcode.alorak.com/img/technic-hub.png',       hw:0x80, ready:true, lwp3:true},
   {key:'city_hub',         label:'City Hub',          img:'https://blockcode.alorak.com/img/city-hub.png',          hw:0x41, ready:true, lwp3:true},
   {key:'boost_move_hub',   label:'Boost Move Hub',    img:'https://blockcode.alorak.com/img/boost-hub.png',         hw:0x40, ready:true, lwp3:true},
-  {key:'remote_controller',label:'Remote Controller', img:'https://blockcode.alorak.com/img/remote-controller.png', hw:0x42, ready:true, lwp3:true}
+  {key:'remote_controller',label:'Remote Controller', img:'https://blockcode.alorak.com/img/remote_controller_icon.png', hw:0x42, ready:true, lwp3:true}
 ];
 
 /* LEGO uygulamasının kendi reklam filtresi: manufacturer data = [2, hwType, …]

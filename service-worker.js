@@ -38,7 +38,7 @@ const REMOTE_ARTWORK = [
   "https://blockcode.alorak.com/img/technic-hub.png",
   "https://blockcode.alorak.com/img/city-hub.png",
   "https://blockcode.alorak.com/img/boost-hub.png",
-  "https://blockcode.alorak.com/img/remote-controller.png",
+  "https://blockcode.alorak.com/img/remote_controller_icon.png",
   "https://blockcode.alorak.com/img/spike_motor_icon.png",
   "https://blockcode.alorak.com/img/force_sensor_icon.png",
   "https://blockcode.alorak.com/img/color_sensor_icon.png",
